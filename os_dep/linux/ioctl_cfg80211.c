@@ -23,6 +23,13 @@
 
 #ifdef CONFIG_IOCTL_CFG80211
 
+// cybik's shitty patches
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0))
+#if !defined(WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
+#define WIPHY_FLAG_SUPPORTS_SCHED_SCAN BIT(12)
+#endif
+#endif
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0))
 #define STATION_INFO_SIGNAL		BIT(NL80211_STA_INFO_SIGNAL)
 #define STATION_INFO_TX_BITRATE		BIT(NL80211_STA_INFO_TX_BITRATE)
@@ -746,6 +753,25 @@ check_bss:
 		freq = rtw_ch2freq(channel);
 		notify_channel = ieee80211_get_channel(wiphy, freq);
 #endif
+        /*
+struct cfg80211_roam_info {
+	struct ieee80211_channel *channel;
+	struct cfg80211_bss *bss;
+	const u8 *bssid;
+	const u8 *req_ie;
+	size_t req_ie_len;
+	const u8 *resp_ie;
+	size_t resp_ie_len;
+};
+*/
+        struct cfg80211_roam_info roam_info = {
+            .channel = notify_channel,
+            .bssid = cur_network->network.Ssid,
+            .req_ie = pmlmepriv->assoc_req + sizeof(struct rtw_ieee80211_hdr_3addr) + 2,
+                .req_ie_len = pmlmepriv->assoc_req_len - sizeof(struct rtw_ieee80211_hdr_3addr) - 2,
+                .resp_ie = pmlmepriv->assoc_rsp + sizeof(struct rtw_ieee80211_hdr_3addr) + 6,
+                .resp_ie_len = pmlmepriv->assoc_rsp_len - sizeof(struct rtw_ieee80211_hdr_3addr) - 6
+        };
 
 		RTW_INFO(FUNC_ADPT_FMT" call cfg80211_roamed\n", FUNC_ADPT_ARG(padapter));
 		cfg80211_roamed(padapter->pnetdev
@@ -3595,7 +3621,7 @@ static int rtw_cfg80211_add_monitor_if(_adapter *padapter, char *name, struct ne
 	mon_ndev->type = ARPHRD_IEEE80211_RADIOTAP;
 	strncpy(mon_ndev->name, name, IFNAMSIZ);
 	mon_ndev->name[IFNAMSIZ - 1] = 0;
-	mon_ndev->destructor = rtw_ndev_destructor;
+	mon_ndev->priv_destructor = rtw_ndev_destructor;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29))
 	mon_ndev->netdev_ops = &rtw_cfg80211_monitor_if_ops;

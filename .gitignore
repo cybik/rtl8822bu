@@ -1,3 +1,10 @@
 sftp-config.json
 *.o
 *.ko
+cmake-build-*/
+.tmp-versions/
+
+
+CMakeLists.txt
+.idea/
+.*.o.cmd
