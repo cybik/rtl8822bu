@@ -755,18 +755,7 @@ check_bss:
 #endif
 
 		RTW_INFO(FUNC_ADPT_FMT" call cfg80211_roamed\n", FUNC_ADPT_ARG(padapter));
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0)) || (0==0)
-        /*
-struct cfg80211_roam_info {
-	struct ieee80211_channel *channel;
-	struct cfg80211_bss *bss;
-	const u8 *bssid;
-	const u8 *req_ie;
-	size_t req_ie_len;
-	const u8 *resp_ie;
-	size_t resp_ie_len;
-};
-*/
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0))
         struct cfg80211_roam_info roam_info = {
                 .channel = notify_channel,
                 .bssid = cur_network->network.MacAddress,
